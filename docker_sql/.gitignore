@@ -1,3 +1,4 @@
 postgresql.ipynb
 *.parquet
-ny_taxi_postgres_data
+ny_taxi_postgres_data/
+config.py
