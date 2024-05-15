@@ -8,6 +8,7 @@ terraform {
 }
 
 variable "aws-credentials" {
+  description = "AWS credentials"
   type = string
 }
 
@@ -28,3 +29,14 @@ resource "aws_s3_bucket" "demo-bucket" {
   }
 }
 
+resource "aws_db_instance" "pgdatabase" {
+  allocated_storage = 20
+  db_name = "terraformDb"
+  engine = "postgres"
+  engine_version = "16.2"
+  instance_class = "db.t3.micro"
+  username= "root"
+  password = "password"
+  skip_final_snapshot = true
+  vpc_security_group_ids = ["sg-037334a01b964d48a"]
+}
