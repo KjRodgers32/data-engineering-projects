@@ -36,3 +36,4 @@ terraform.rc
 # Other gitignore files
 .env
 .terraform.lock.hcl
+logs/
