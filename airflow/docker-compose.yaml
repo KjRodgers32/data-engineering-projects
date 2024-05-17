@@ -44,7 +44,6 @@
 #
 # Feel free to modify this file to suit your needs.
 ---
-<<<<<<< HEAD
 x-airflow-common: &airflow-common
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
@@ -52,48 +51,25 @@ x-airflow-common: &airflow-common
   # image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.1}
   build: .
   environment: &airflow-common-env
-=======
-x-airflow-common:
-  &airflow-common
-  # In order to add custom dependencies or upgrade provider packages you can use your extended image.
-  # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
-  # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.1}
-  # build: .
-  environment:
-    &airflow-common-env
->>>>>>> 2d1ead0c58a056d5529273324db71542f4777d74
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
-<<<<<<< HEAD
     AIRFLOW__CORE__FERNET_KEY: ""
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__API__AUTH_BACKENDS: "airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session"
-=======
-    AIRFLOW__CORE__FERNET_KEY: ''
-    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
->>>>>>> 2d1ead0c58a056d5529273324db71542f4777d74
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
     # yamllint enable rule:line-length
-<<<<<<< HEAD
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
-=======
-    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
->>>>>>> 2d1ead0c58a056d5529273324db71542f4777d74
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # The following line can be used to set a custom config file, stored in the local config folder
     # If you want to use it, outcomment it and replace airflow.cfg with the name of your config file
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
-<<<<<<< HEAD
     PG_HOST: "${PG_HOST}"
     PG_USER: "${PG_USER}"
     PG_PASSWORD: "${PG_PASSWORD}"
@@ -102,22 +78,14 @@ x-airflow-common:
     AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
 
-=======
->>>>>>> 2d1ead0c58a056d5529273324db71542f4777d74
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-<<<<<<< HEAD
     - ${HOME}/.aws/credentials:/opt/airflow/.aws/credentials:ro
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on: &airflow-common-depends-on
-=======
-  user: "${AIRFLOW_UID:-50000}:0"
-  depends_on:
-    &airflow-common-depends-on
->>>>>>> 2d1ead0c58a056d5529273324db71542f4777d74
     redis:
       condition: service_healthy
     postgres:
@@ -212,15 +180,11 @@ services:
     <<: *airflow-common
     command: triggerer
     healthcheck:
-<<<<<<< HEAD
       test:
         [
           "CMD-SHELL",
           'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"',
         ]
-=======
-      test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
->>>>>>> 2d1ead0c58a056d5529273324db71542f4777d74
       interval: 30s
       timeout: 10s
       retries: 5
@@ -286,19 +250,11 @@ services:
     # yamllint enable rule:line-length
     environment:
       <<: *airflow-common-env
-<<<<<<< HEAD
       _AIRFLOW_DB_MIGRATE: "true"
       _AIRFLOW_WWW_USER_CREATE: "true"
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _PIP_ADDITIONAL_REQUIREMENTS: ""
-=======
-      _AIRFLOW_DB_MIGRATE: 'true'
-      _AIRFLOW_WWW_USER_CREATE: 'true'
-      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
-      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
-      _PIP_ADDITIONAL_REQUIREMENTS: ''
->>>>>>> 2d1ead0c58a056d5529273324db71542f4777d74
     user: "0:0"
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
