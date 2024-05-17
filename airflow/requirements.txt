@@ -1,6 +1,10 @@
 apache-airflow-providers-amazon
+<<<<<<< HEAD
 pyarrow
 pandas
 sqlalchemy
 psycopg2-binary
 boto3
+=======
+pyarrow
+>>>>>>> 2d1ead0c58a056d5529273324db71542f4777d74
