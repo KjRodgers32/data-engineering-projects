@@ -18,8 +18,8 @@ provider "aws" {
 }
 
 
-resource "aws_s3_bucket" "demo-bucket" {
-  bucket = "kevinr-terraform-demo-bucket"
+resource "aws_s3_bucket" "taxi_data_bucket" {
+  bucket = "taxi-data-bucket-klr"
 
   force_destroy = true
 

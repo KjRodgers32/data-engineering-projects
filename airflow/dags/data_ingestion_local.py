@@ -8,6 +8,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime
 
 from ingest_script import ingest_parquet_data_callable, ingest_csv_data_callable
+from upload_s3_script import upload_callable
 
 AIRFLOW_HOME = os.environ.get("AIRFLOW_HOME", "/opt/airflow")
 
@@ -18,6 +19,7 @@ PG_PORT = os.environ.get("PG_PORT")
 PG_DATABASE = os.environ.get("PG_DATABASE")
 AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+S3_BUCKET_NAME = "taxi-data-bucket-klr"
 
 yt_local_workflow = DAG(
     "YellowTaxiLocalIngestionDag",
@@ -62,26 +64,38 @@ with yt_local_workflow:
     )
 
 
-    ingest_yellow_taxi_data_task = PythonOperator(
-        task_id='ingest_yellow_taxi_data',
-        python_callable=ingest_parquet_data_callable,
+    # ingest_yellow_taxi_data_task = PythonOperator(
+    #     task_id='ingest_yellow_taxi_data',
+    #     python_callable=ingest_parquet_data_callable,
+    #     op_kwargs=dict(
+    #         user= PG_USER,
+    #         password= PG_PASSWORD,
+    #         host= PG_HOST,
+    #         port= PG_PORT,
+    #         db= PG_DATABASE,
+    #         table_name=YT_TABLE_NAME_TEMPLATE,
+    #         parquet_file_name=YT_OUTPUT_FILE_TEMPLATE
+    #     )
+    # )
+
+    upload_yellow_taxi_data_to_s3_task = PythonOperator(
+        task_id='upload_yellow_taxi_data_to_s3',
+        python_callable=upload_callable,
         op_kwargs=dict(
-            user= PG_USER,
-            password= PG_PASSWORD,
-            host= PG_HOST,
-            port= PG_PORT,
-            db= PG_DATABASE,
-            table_name=YT_TABLE_NAME_TEMPLATE,
-            parquet_file_name=YT_OUTPUT_FILE_TEMPLATE
+            file_name=YT_TABLE_NAME_TEMPLATE,
+            file_location=YT_OUTPUT_FILE_TEMPLATE,
+            access_key=AWS_ACCESS_KEY,
+            secret_key=AWS_SECRET_ACCESS_KEY,
+            bucket_name=S3_BUCKET_NAME
         )
     )
 
-    remove_yt_file_from_directory_task = BashOperator(
-        task_id='remove_yt_file_from_directory',
+    remove_yellow_taxi_file_from_directory_task = BashOperator(
+        task_id='remove_yellow_taxi_file_from_directory',
         bash_command= f'rm {YT_OUTPUT_FILE_TEMPLATE}'
     )
 
-    wget_yellow_taxi_data_task >> ingest_yellow_taxi_data_task >> remove_yt_file_from_directory_task
+    wget_yellow_taxi_data_task >> upload_yellow_taxi_data_to_s3_task >> remove_yellow_taxi_file_from_directory_task # removed ingest data since data is already stored locally
 
 with fhv_local_workflow:
     wget_fhv_data_task = BashOperator(
@@ -89,17 +103,29 @@ with fhv_local_workflow:
         bash_command= f'wget {FHV_URL_TEMPLATE} -O {FHV_OUTPUT_FILE_TEMPLATE}'
     )
 
-    ingest_fhv_data_task = PythonOperator(
-        task_id='ingest_fhv_data',
-        python_callable=ingest_parquet_data_callable,
+    # ingest_fhv_data_task = PythonOperator(
+    #     task_id='ingest_fhv_data',
+    #     python_callable=ingest_parquet_data_callable,
+    #     op_kwargs=dict(
+    #         user= PG_USER,
+    #         password= PG_PASSWORD,
+    #         host= PG_HOST,
+    #         port= PG_PORT,
+    #         db= PG_DATABASE,
+    #         table_name=FHV_TABLE_NAME_TEMPLATE,
+    #         parquet_file_name=FHV_OUTPUT_FILE_TEMPLATE
+    #     )
+    # )
+
+    upload_fhv_data_to_s3_task = PythonOperator(
+        task_id='upload_fhv_data_to_s3',
+        python_callable=upload_callable,
         op_kwargs=dict(
-            user= PG_USER,
-            password= PG_PASSWORD,
-            host= PG_HOST,
-            port= PG_PORT,
-            db= PG_DATABASE,
-            table_name=FHV_TABLE_NAME_TEMPLATE,
-            parquet_file_name=FHV_OUTPUT_FILE_TEMPLATE
+            file_name=FHV_TABLE_NAME_TEMPLATE,
+            file_location=FHV_OUTPUT_FILE_TEMPLATE,
+            access_key=AWS_ACCESS_KEY,
+            secret_key=AWS_SECRET_ACCESS_KEY,
+            bucket_name=S3_BUCKET_NAME
         )
     )
 
@@ -108,7 +134,7 @@ with fhv_local_workflow:
         bash_command= f'rm {FHV_OUTPUT_FILE_TEMPLATE}'
     )
 
-    wget_fhv_data_task >> ingest_fhv_data_task >> remove_fhv_file_from_directory_task
+    wget_fhv_data_task >> upload_fhv_data_to_s3_task >> remove_fhv_file_from_directory_task # removed ingest data since data is already stored locally
 
 with zones_local_workflow:
     wget_zones_data_task = BashOperator(
@@ -116,17 +142,29 @@ with zones_local_workflow:
         bash_command= f'wget {ZONE_URL} -O {ZONE_OUTPUT_FILE_TEMPLATE}'
     )
 
-    ingest_zone_data_task = PythonOperator(
-        task_id= 'ingest_zone_data',
-        python_callable=ingest_csv_data_callable,
+    # ingest_zone_data_task = PythonOperator(
+    #     task_id= 'ingest_zone_data',
+    #     python_callable=ingest_csv_data_callable,
+    #     op_kwargs=dict(
+    #         user= PG_USER,
+    #         password= PG_PASSWORD,
+    #         host= PG_HOST,
+    #         port= PG_PORT,
+    #         db= PG_DATABASE,
+    #         table_name=ZONE_TABLE_NAME_TEMPLATE,
+    #         csv_file_name=ZONE_OUTPUT_FILE_TEMPLATE
+    #     )
+    # )
+
+    upload_zone_data_to_s3_task = PythonOperator(
+        task_id='upload_zone_data_to_s3',
+        python_callable=upload_callable,
         op_kwargs=dict(
-            user= PG_USER,
-            password= PG_PASSWORD,
-            host= PG_HOST,
-            port= PG_PORT,
-            db= PG_DATABASE,
-            table_name=ZONE_TABLE_NAME_TEMPLATE,
-            csv_file_name=ZONE_OUTPUT_FILE_TEMPLATE
+            file_name=ZONE_TABLE_NAME_TEMPLATE,
+            file_location=ZONE_OUTPUT_FILE_TEMPLATE,
+            access_key=AWS_ACCESS_KEY,
+            secret_key=AWS_SECRET_ACCESS_KEY,
+            bucket_name=S3_BUCKET_NAME
         )
     )
 
@@ -135,4 +173,4 @@ with zones_local_workflow:
         bash_command= f'rm {ZONE_OUTPUT_FILE_TEMPLATE}'
     )
 
-    wget_zones_data_task >> ingest_zone_data_task >> remove_zone_file_from_directory_task
+    wget_zones_data_task  >> upload_zone_data_to_s3_task >> remove_zone_file_from_directory_task # removed ingest data since data is already stored locally
