@@ -1,10 +1,5 @@
-import boto3
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
-def upload_callable(file_name, file_location, access_key, secret_key, bucket_name):
-    print(access_key, secret_key, file_name)
-    session = boto3.Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key
-    )
-    s3 = session.client('s3')
-    s3.upload_file(file_location,bucket_name,file_name)
+def upload_callable(file_name, file_location, bucket_name):
+    s3 = S3Hook(aws_conn_id= 'aws_default')
+    s3.load_file(filename=file_location,bucket_name=bucket_name,key=file_name)

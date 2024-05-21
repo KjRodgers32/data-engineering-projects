@@ -4,7 +4,8 @@ from airflow import DAG
 
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-
+from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
+from airflow.sensors.external_task import ExternalTaskSensor
 from datetime import datetime
 
 from ingest_script import ingest_parquet_data_callable, ingest_csv_data_callable
@@ -26,6 +27,7 @@ yt_local_workflow = DAG(
     schedule_interval="0 6 2 * *",
     start_date=datetime(2019,1,1),
     end_date = datetime(2021,1,1),
+    max_active_runs= 1,
     catchup=True
 )
 
@@ -34,6 +36,7 @@ fhv_local_workflow = DAG(
     schedule_interval="0 6 2 * *",
     start_date=datetime(2019,1,1),
     end_date = datetime(2020,1,1),
+    max_active_runs= 1,
     catchup=True
 )
 
@@ -82,13 +85,18 @@ with yt_local_workflow:
         task_id='upload_yellow_taxi_data_to_s3',
         python_callable=upload_callable,
         op_kwargs=dict(
-            file_name=YT_TABLE_NAME_TEMPLATE,
+            file_name=YT_TABLE_NAME_TEMPLATE + '.parquet',
             file_location=YT_OUTPUT_FILE_TEMPLATE,
-            access_key=AWS_ACCESS_KEY,
-            secret_key=AWS_SECRET_ACCESS_KEY,
             bucket_name=S3_BUCKET_NAME
         )
     )
+
+    # upload_yellow_taxi_data_to_s3_task = LocalFilesystemToS3Operator(
+    #     task_id='upload_yellow_taxi_data_to_s3',
+    #     filename=YT_OUTPUT_FILE_TEMPLATE,
+    #     dest_key=YT_TABLE_NAME_TEMPLATE,
+    #     dest_bucket=S3_BUCKET_NAME
+    # )
 
     remove_yellow_taxi_file_from_directory_task = BashOperator(
         task_id='remove_yellow_taxi_file_from_directory',
@@ -117,14 +125,19 @@ with fhv_local_workflow:
     #     )
     # )
 
+    wait_for_other_calls_to_s3_to_finish_task_fhv = ExternalTaskSensor(
+        task_id='wait_for_other_calls_to_s3_to_finish_fhv',
+        external_dag_id='YellowTaxiLocalIngestionDag',
+        external_task_id='upload_yellow_taxi_data_to_s3',
+        start_date=datetime(2019,1,1)
+    )
+
     upload_fhv_data_to_s3_task = PythonOperator(
         task_id='upload_fhv_data_to_s3',
         python_callable=upload_callable,
         op_kwargs=dict(
-            file_name=FHV_TABLE_NAME_TEMPLATE,
+            file_name=FHV_TABLE_NAME_TEMPLATE + '.parquet',
             file_location=FHV_OUTPUT_FILE_TEMPLATE,
-            access_key=AWS_ACCESS_KEY,
-            secret_key=AWS_SECRET_ACCESS_KEY,
             bucket_name=S3_BUCKET_NAME
         )
     )
@@ -134,7 +147,7 @@ with fhv_local_workflow:
         bash_command= f'rm {FHV_OUTPUT_FILE_TEMPLATE}'
     )
 
-    wget_fhv_data_task >> upload_fhv_data_to_s3_task >> remove_fhv_file_from_directory_task # removed ingest data since data is already stored locally
+    wget_fhv_data_task >> wait_for_other_calls_to_s3_to_finish_task_fhv >> upload_fhv_data_to_s3_task >> remove_fhv_file_from_directory_task # removed ingest data since data is already stored locally
 
 with zones_local_workflow:
     wget_zones_data_task = BashOperator(
@@ -156,14 +169,19 @@ with zones_local_workflow:
     #     )
     # )
 
+    wait_for_other_calls_to_s3_to_finish_task_zones = ExternalTaskSensor(
+        task_id='wait_for_other_calls_to_s3_to_finish_zones',
+        external_dag_id='FHVLocalIngestionDag',
+        external_task_id='upload_fhv_data_to_s3'
+
+    )
+
     upload_zone_data_to_s3_task = PythonOperator(
         task_id='upload_zone_data_to_s3',
         python_callable=upload_callable,
         op_kwargs=dict(
-            file_name=ZONE_TABLE_NAME_TEMPLATE,
+            file_name=ZONE_TABLE_NAME_TEMPLATE + '.csv',
             file_location=ZONE_OUTPUT_FILE_TEMPLATE,
-            access_key=AWS_ACCESS_KEY,
-            secret_key=AWS_SECRET_ACCESS_KEY,
             bucket_name=S3_BUCKET_NAME
         )
     )
@@ -173,4 +191,4 @@ with zones_local_workflow:
         bash_command= f'rm {ZONE_OUTPUT_FILE_TEMPLATE}'
     )
 
-    wget_zones_data_task  >> upload_zone_data_to_s3_task >> remove_zone_file_from_directory_task # removed ingest data since data is already stored locally
+    wget_zones_data_task  >> wait_for_other_calls_to_s3_to_finish_task_zones >> upload_zone_data_to_s3_task >> remove_zone_file_from_directory_task # removed ingest data since data is already stored locally
