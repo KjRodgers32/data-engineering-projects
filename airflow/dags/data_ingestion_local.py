@@ -23,10 +23,6 @@ PG_PASSWORD = os.environ.get("PG_PASSWORD")
 PG_PORT = os.environ.get("PG_PORT")
 PG_DATABASE = os.environ.get("PG_DATABASE")
 
-# Amazon access variables
-AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY")
-AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
-
 # Amazon resource variables
 S3_BUCKET_NAME = "taxi-data-bucket-klr"
 
