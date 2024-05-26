@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: staging
+    database: taxi_data
+    schema: public
+
+    tables:
+      - name: green_taxi_data
+      - name: yellow_taxi_data
+      - name: fhv_taxi_data
