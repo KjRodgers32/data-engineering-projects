@@ -105,7 +105,7 @@ FHV_TABLE_NAME_TEMPLATE = 'fhv_{{ execution_date.strftime(\'%Y-%m\') }}'
 # Variables for the Green Trip data
 GT_URL_TEMPLATE = URL_PREFIX + '/' + 'green_tripdata_{{ execution_date.strftime(\'%Y-%m\') }}.parquet'
 GT_OUTPUT_FILE_TEMPLATE = AIRFLOW_HOME + '/green_taxi_output_{{ execution_date.strftime(\'%Y-%m\') }}.parquet'
-GT_TABLE_NAME_TEMPLATE = 'green_{{ execution_date.strftime(\'%Y-%m\') }}'
+GT_TABLE_NAME_TEMPLATE = 'green_taxi_{{ execution_date.strftime(\'%Y-%m\') }}'
 
 # Variables for the zones data
 ZONE_URL = 'https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv'
@@ -188,7 +188,7 @@ with fhv_local_workflow:
     )
 
     wget_fhv_data_task >> wait_for_other_calls_to_s3_to_finish_task_fhv >> upload_fhv_data_to_s3_task >> remove_fhv_file_from_directory_task
-    
+
 with gt_local_workflow:
     wget_gt_data_task = BashOperator(
         task_id= 'wget_gt_data',
