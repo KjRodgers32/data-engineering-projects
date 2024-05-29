@@ -7,7 +7,7 @@ from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
-
+from airflow.providers.dbt.cloud.operators.dbt import DbtCloudRunJobOperator
 
 from datetime import datetime
 
@@ -84,6 +84,12 @@ fhv_snowflake_workflow = DAG(
     end_date = datetime(2020,1,1),
     max_active_runs= 1,
     catchup=True
+)
+
+dbt_job_workflow = DAG(
+    "DBTJobDag",
+    schedule_interval="@daily",
+    start_date=datetime(2024,5,29)
 )
 
 URL_PREFIX = 'https://d37ci6vzurychx.cloudfront.net/trip-data'
@@ -272,3 +278,13 @@ with fhv_snowflake_workflow:
     )
 
     fhv_snowflake_workflow
+
+# DAGs to run dbt jobs
+with dbt_job_workflow:
+    taxi_data_dbt_job_task = DbtCloudRunJobOperator(
+        task_id='taxi_data_dbt_job',
+        dbt_cloud_conn_id='dbt_conn',
+        job_id='70403103936732',
+        check_interval=10,
+        timeout=300
+    )

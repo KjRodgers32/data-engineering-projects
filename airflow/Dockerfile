@@ -4,7 +4,6 @@ USER root
 RUN apt-get update -qq && apt-get install wget -qqq
 
 COPY requirements.txt .
-COPY credentials .
 
 USER airflow
 
