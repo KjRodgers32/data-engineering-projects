@@ -35,8 +35,9 @@ f.pickup_locationid = pd.locationid
 join dim_zones as dd on
 f.dropoff_locationid = dd.locationid
 
-{% if var(is_test_run, default=True) %}
+-- dbt build --select <model_name> --vars '{'is_test_run': 'false'}'
+{% if var('is_test_run', default=true) %}
 
-limit 100
+  limit 100
 
 {% endif %}
