@@ -23,7 +23,7 @@ models:
     columns:
       - name: tripid
         data_type: varchar
-        description: ""
+        description: Unique id for record
 
       - name: vendorid
         data_type: number
